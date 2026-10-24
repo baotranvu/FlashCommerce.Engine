@@ -1,0 +1,32 @@
+{
+    "name": "flashcommerce/identity",
+    "description": "High-Performance Identity & Access Management Module for FlashCommerce",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bao Tran Vu",
+            "email": "tranvubao.dev@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "FlashCommerce\\Identity\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "FlashCommerce\\Identity\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "FlashCommerce\\Identity\\IdentityServiceProvider"
+            ]
+        }
+    }
+}
