@@ -46,16 +46,6 @@
         "sort-packages": true,
         "audit": {
             "block": false
-        },
-        "policy": {
-            "advisories": {
-                "block": false
-            }
-        }
-    },
-    "policy": {
-        "advisories": {
-            "block": false
         }
     },
     "minimum-stability": "dev",
