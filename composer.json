@@ -21,7 +21,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Tests\\": "tests/"
+            "Tests\\": "tests/",
+            "FlashCommerce\\Identity\\Tests\\": "packages/Identity/tests/"
         }
     },
     "scripts": {
@@ -29,16 +30,12 @@
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump"
         ],
         "test": "vendor/bin/phpunit",
+        "test:arch": "vendor/bin/phpunit --testsuite=Architecture",
         "test:unit": "vendor/bin/phpunit --testsuite=Identity::Unit",
-        "test:chaos": "php tests/E2E/race_condition_chaos.php",
-        "test:smoke": "php tests/E2E/verification_lifecycle_smoke.php",
-        "test:rfc7807": "php tests/E2E/global_exception_rfc7807_test.php",
-        "test:all": [
-            "@test",
-            "@test:chaos",
-            "@test:smoke",
-            "@test:rfc7807"
-        ]
+        "test:integration": "vendor/bin/phpunit --testsuite=Identity::Integration",
+        "test:e2e": "vendor/bin/phpunit --testsuite=Identity::E2E",
+        "test:identity": "vendor/bin/phpunit --testsuite=Identity::Unit,Identity::Integration,Identity::E2E",
+        "test:all": "vendor/bin/phpunit"
     },
     "config": {
         "optimize-autoloader": true,

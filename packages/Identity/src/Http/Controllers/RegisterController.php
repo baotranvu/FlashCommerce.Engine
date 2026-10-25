@@ -24,13 +24,9 @@ class RegisterController
         $user = $this->userRepository->create($validated);
 
         // Automatically dispatch initial verification challenge (Strategy/Factory pattern)
-        try {
-            $strategy = $this->verificationFactory->make('email_otp');
-            $strategy->sendChallenge($user);
-        } catch (\Throwable $e) {
-            // Best-effort challenge dispatch: does not abort registration if mail/redis fails
-            report($e);
-        }
+        rescue(function () use ($user) {
+            $this->verificationFactory->make('email_otp')->sendChallenge($user);
+        }, report: true);
 
         return response()->json([
             'message' => 'User registered successfully via Identity Package (Repository Pattern). Verification code dispatched.',

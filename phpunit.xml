@@ -5,11 +5,20 @@
          colors="true"
          cacheDirectory=".phpunit.cache">
     <testsuites>
+        <testsuite name="Architecture">
+            <directory>tests/Architecture</directory>
+        </testsuite>
         <testsuite name="Identity::Unit">
             <directory>packages/Identity/tests/Unit</directory>
         </testsuite>
         <testsuite name="Identity::Integration">
             <directory>packages/Identity/tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Identity::E2E">
+            <directory>packages/Identity/tests/E2E</directory>
+        </testsuite>
+        <testsuite name="System::Journeys">
+            <directory>tests/E2E/Journeys</directory>
         </testsuite>
     </testsuites>
     <source>
