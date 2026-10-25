@@ -8,7 +8,7 @@ use FlashCommerce\Identity\Domain\Entities\UserEntity;
 use FlashCommerce\Identity\Domain\Repositories\UserRepositoryInterface;
 use FlashCommerce\Identity\Http\Middleware\EnsureEmailVerifiedFastPath;
 use FlashCommerce\Identity\Infrastructure\Persistence\Eloquent\UserModel;
-use FlashCommerce\Identity\Infrastructure\Verification\Stage3WriteDeferredVerificationStrategy;
+use FlashCommerce\Identity\Infrastructure\Verification\WriteDeferredVerificationStrategy;
 use FlashCommerce\Identity\Tests\Integration\IdentityIntegrationTestCase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -19,14 +19,14 @@ use Symfony\Component\HttpFoundation\Response;
 final class WriteDeferredChaosTest extends IdentityIntegrationTestCase
 {
     private UserRepositoryInterface $userRepo;
-    private Stage3WriteDeferredVerificationStrategy $stage3Strategy;
+    private WriteDeferredVerificationStrategy $writeDeferredStrategy;
 
     protected function setUp(): void
     {
         parent::setUp();
         Redis::flushdb();
         $this->userRepo = app(UserRepositoryInterface::class);
-        $this->stage3Strategy = app(Stage3WriteDeferredVerificationStrategy::class);
+        $this->writeDeferredStrategy = app(WriteDeferredVerificationStrategy::class);
     }
 
     private function createUnverifiedUser(string $email): UserEntity

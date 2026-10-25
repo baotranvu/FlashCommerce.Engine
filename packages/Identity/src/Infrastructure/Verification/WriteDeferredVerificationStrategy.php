@@ -13,7 +13,7 @@ use FlashCommerce\Identity\Domain\Verification\VerificationStrategyInterface;
 use FlashCommerce\Identity\Infrastructure\Redis\IdentityRedisKeys;
 use Illuminate\Support\Facades\Redis;
 
-class Stage3WriteDeferredVerificationStrategy implements VerificationStrategyInterface
+class WriteDeferredVerificationStrategy implements VerificationStrategyInterface
 {
     private ?string $luaScript = null;
 

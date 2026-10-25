@@ -14,8 +14,8 @@ use FlashCommerce\Identity\Infrastructure\Services\AuthenticationService;
 use FlashCommerce\Identity\Infrastructure\Tokens\JwtTokenService;
 use FlashCommerce\Identity\Infrastructure\Tokens\RedisRefreshTokenRepository;
 use FlashCommerce\Identity\Infrastructure\Verification\EmailOtpVerificationStrategy;
-use FlashCommerce\Identity\Infrastructure\Verification\Stage3WriteDeferredVerificationStrategy;
 use FlashCommerce\Identity\Infrastructure\Verification\VerificationStrategyFactory;
+use FlashCommerce\Identity\Infrastructure\Verification\WriteDeferredVerificationStrategy;
 
 class IdentityServiceProvider extends ServiceProvider
 {
@@ -36,7 +36,7 @@ class IdentityServiceProvider extends ServiceProvider
         // Bind Verification Strategy Factory & Strategies
         $this->app->singleton(VerificationStrategyFactory::class);
         $this->app->singleton(EmailOtpVerificationStrategy::class);
-        $this->app->singleton(Stage3WriteDeferredVerificationStrategy::class);
+        $this->app->singleton(WriteDeferredVerificationStrategy::class);
 
         // Bind Token Services
         $this->app->singleton(JwtTokenService::class, function ($app) {

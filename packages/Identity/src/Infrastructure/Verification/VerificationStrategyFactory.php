@@ -11,7 +11,7 @@ class VerificationStrategyFactory
     {
         return match ($channel) {
             'email_otp'       => app(EmailOtpVerificationStrategy::class),
-            'write_deferred'  => app(Stage3WriteDeferredVerificationStrategy::class),
+            'write_deferred'  => app(WriteDeferredVerificationStrategy::class),
             default           => throw new InvalidArgumentException("Unsupported verification channel [{$channel}]"),
         };
     }

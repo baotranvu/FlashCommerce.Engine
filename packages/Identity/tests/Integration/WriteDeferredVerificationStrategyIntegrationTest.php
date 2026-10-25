@@ -10,12 +10,12 @@ use FlashCommerce\Identity\Domain\Exceptions\MaxOtpAttemptsExceededException;
 use FlashCommerce\Identity\Domain\Exceptions\OtpExpiredException;
 use FlashCommerce\Identity\Domain\Repositories\UserRepositoryInterface;
 use FlashCommerce\Identity\Infrastructure\Redis\IdentityRedisKeys;
-use FlashCommerce\Identity\Infrastructure\Verification\Stage3WriteDeferredVerificationStrategy;
+use FlashCommerce\Identity\Infrastructure\Verification\WriteDeferredVerificationStrategy;
 use Illuminate\Support\Facades\Redis;
 
-final class Stage3WriteDeferredVerificationStrategyTest extends IdentityIntegrationTestCase
+final class WriteDeferredVerificationStrategyIntegrationTest extends IdentityIntegrationTestCase
 {
-    private Stage3WriteDeferredVerificationStrategy $strategy;
+    private WriteDeferredVerificationStrategy $strategy;
     private UserEntity $user;
 
     protected function setUp(): void
@@ -23,7 +23,7 @@ final class Stage3WriteDeferredVerificationStrategyTest extends IdentityIntegrat
         parent::setUp();
         Redis::flushdb();
 
-        $this->strategy = app(Stage3WriteDeferredVerificationStrategy::class);
+        $this->strategy = app(WriteDeferredVerificationStrategy::class);
         $userRepo = app(UserRepositoryInterface::class);
         $this->user = $userRepo->create([
             'name' => 'LuaTester',
