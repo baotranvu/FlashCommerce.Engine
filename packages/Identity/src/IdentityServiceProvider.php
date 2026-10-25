@@ -8,11 +8,13 @@ use FlashCommerce\Identity\Domain\Services\AuthenticationServiceInterface;
 use FlashCommerce\Identity\Domain\Tokens\RefreshTokenRepositoryInterface;
 use FlashCommerce\Identity\Domain\Tokens\TokenIssuerInterface;
 use FlashCommerce\Identity\Domain\Tokens\TokenVerifierInterface;
+use FlashCommerce\Identity\Infrastructure\Commands\FlushVerifiedUsersCommand;
 use FlashCommerce\Identity\Infrastructure\Persistence\Eloquent\EloquentUserRepository;
 use FlashCommerce\Identity\Infrastructure\Services\AuthenticationService;
 use FlashCommerce\Identity\Infrastructure\Tokens\JwtTokenService;
 use FlashCommerce\Identity\Infrastructure\Tokens\RedisRefreshTokenRepository;
 use FlashCommerce\Identity\Infrastructure\Verification\EmailOtpVerificationStrategy;
+use FlashCommerce\Identity\Infrastructure\Verification\Stage3WriteDeferredVerificationStrategy;
 use FlashCommerce\Identity\Infrastructure\Verification\VerificationStrategyFactory;
 
 class IdentityServiceProvider extends ServiceProvider
@@ -31,9 +33,10 @@ class IdentityServiceProvider extends ServiceProvider
             EloquentUserRepository::class
         );
 
-        // Bind Verification Strategy Factory
+        // Bind Verification Strategy Factory & Strategies
         $this->app->singleton(VerificationStrategyFactory::class);
         $this->app->singleton(EmailOtpVerificationStrategy::class);
+        $this->app->singleton(Stage3WriteDeferredVerificationStrategy::class);
 
         // Bind Token Services
         $this->app->singleton(JwtTokenService::class, function ($app) {
@@ -69,5 +72,12 @@ class IdentityServiceProvider extends ServiceProvider
     {
         // Load package API routes
         $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
+
+        // Register console commands
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                FlushVerifiedUsersCommand::class,
+            ]);
+        }
     }
 }

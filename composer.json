@@ -34,7 +34,8 @@
         "test:unit": "vendor/bin/phpunit --testsuite=Identity::Unit",
         "test:integration": "vendor/bin/phpunit --testsuite=Identity::Integration",
         "test:e2e": "vendor/bin/phpunit --testsuite=Identity::E2E",
-        "test:identity": "vendor/bin/phpunit --testsuite=Identity::Unit,Identity::Integration,Identity::E2E",
+        "test:chaos": "vendor/bin/phpunit --testsuite=Identity::Chaos",
+        "test:identity": "vendor/bin/phpunit --testsuite=Identity::Unit,Identity::Integration,Identity::E2E,Identity::Chaos",
         "test:all": "vendor/bin/phpunit"
     },
     "config": {

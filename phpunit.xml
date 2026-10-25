@@ -17,6 +17,9 @@
         <testsuite name="Identity::E2E">
             <directory>packages/Identity/tests/E2E</directory>
         </testsuite>
+        <testsuite name="Identity::Chaos">
+            <directory>packages/Identity/tests/Chaos</directory>
+        </testsuite>
         <testsuite name="System::Journeys">
             <directory>tests/E2E/Journeys</directory>
         </testsuite>
