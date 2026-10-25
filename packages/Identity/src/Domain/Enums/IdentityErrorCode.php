@@ -13,4 +13,8 @@ enum IdentityErrorCode: string
     case UserAlreadyExists = 'USER_ALREADY_EXISTS';
     case UserNotFound = 'USER_NOT_FOUND';
     case DatabaseUnavailable = 'DATABASE_UNAVAILABLE';
+    case InvalidCredentials = 'INVALID_CREDENTIALS';
+    case AccountUnverified = 'ACCOUNT_UNVERIFIED';
+    case InvalidToken = 'INVALID_TOKEN';
+    case TokenReplayDetected = 'TOKEN_REPLAY_DETECTED';
 }

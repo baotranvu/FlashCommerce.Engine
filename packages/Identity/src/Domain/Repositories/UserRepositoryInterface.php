@@ -27,4 +27,9 @@ interface UserRepositoryInterface
      * Mark a user's email as verified in the database.
      */
     public function markEmailAsVerified(int $userId): bool;
+
+    /**
+     * Verify user credentials in constant-time and return UserEntity if valid.
+     */
+    public function verifyCredentials(string $email, string $password): ?UserEntity;
 }

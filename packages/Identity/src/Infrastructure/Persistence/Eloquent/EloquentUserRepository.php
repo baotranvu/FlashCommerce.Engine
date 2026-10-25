@@ -7,6 +7,7 @@ use FlashCommerce\Identity\Domain\Exceptions\DatabaseUnavailableException;
 use FlashCommerce\Identity\Domain\Exceptions\UserAlreadyExistsException;
 use FlashCommerce\Identity\Domain\Repositories\UserRepositoryInterface;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Hash;
 
 class EloquentUserRepository implements UserRepositoryInterface
 {
@@ -71,6 +72,31 @@ class EloquentUserRepository implements UserRepositoryInterface
             return (bool) UserModel::where('id', $userId)
                 ->whereNull('email_verified_at')
                 ->update(['email_verified_at' => now()]);
+        } catch (QueryException $e) {
+            if (isset($e->errorInfo[1]) && in_array($e->errorInfo[1], [2002, 2003], true)) {
+                throw new DatabaseUnavailableException();
+            }
+
+            throw $e;
+        }
+    }
+
+    public function verifyCredentials(string $email, string $password): ?UserEntity
+    {
+        try {
+            $model = UserModel::where('email', strtolower(trim($email)))->first();
+
+            // Constant-time execution: always perform password hash check to eliminate timing leak
+            $dummyHash = '$2y$10$e8wVqF3tU6c5d4A3b2c1d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t';
+            $hashToCheck = $model ? $model->password : $dummyHash;
+
+            $isValid = Hash::check($password, $hashToCheck);
+
+            if (!$model || !$isValid) {
+                return null;
+            }
+
+            return $this->toEntity($model);
         } catch (QueryException $e) {
             if (isset($e->errorInfo[1]) && in_array($e->errorInfo[1], [2002, 2003], true)) {
                 throw new DatabaseUnavailableException();
