@@ -1,0 +1,124 @@
+name: Enterprise CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop, 'feat/**', 'fix/**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # JOB 1: FAST-FAIL LINT & SPEC VALIDATION GATE (~15s)
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint & Composer Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
+      - name: Validate Root and Package Composer Files
+        run: |
+          composer validate --strict
+          composer validate --strict packages/Identity/composer.json
+
+  # ---------------------------------------------------------------------------
+  # JOB 2: 4-TIER TEST & EMPIRICAL CONCURRENCY CHAOS GATE (~45s)
+  # ---------------------------------------------------------------------------
+  test:
+    name: 4-Tier Test Suite & Concurrency Chaos
+    needs: [lint]
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: secretpassword
+          MYSQL_DATABASE: flashcommerce_db
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h localhost -u root -psecretpassword" --health-interval=5s --health-timeout=3s --health-retries=5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: --health-cmd="redis-cli ping" --health-interval=3s --health-timeout=2s --health-retries=5
+
+    env:
+      APP_NAME: FlashCommerce
+      APP_ENV: testing
+      APP_KEY: base64:3p8R7J2mN9K5uV1x4Z8b0A3d6F9h2L5o8Q1s4U7w0Y3=
+      APP_DEBUG: true
+      APP_URL: http://127.0.0.1:8000
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: flashcommerce_db
+      DB_USERNAME: root
+      DB_PASSWORD: secretpassword
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: 127.0.0.1
+      REDIS_PASSWORD: null
+      REDIS_PORT: 6379
+      CACHE_STORE: redis
+      SESSION_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      BCRYPT_ROUNDS: 4
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, redis, pcntl, bcmath, curl
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install Dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Prepare Database Schema
+        run: |
+          mysql -h 127.0.0.1 -u root -psecretpassword flashcommerce_db -e "
+            CREATE TABLE IF NOT EXISTS users (
+              id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              name VARCHAR(255) NOT NULL,
+              email VARCHAR(255) NOT NULL UNIQUE,
+              email_verified_at TIMESTAMP NULL DEFAULT NULL,
+              password VARCHAR(255) NOT NULL,
+              created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+              updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            );
+          "
+
+      - name: Start Background Application Server Daemon
+        run: |
+          php artisan serve --host=127.0.0.1 --port=8000 > storage/logs/ci-server.log 2>&1 &
+          sleep 2
+          curl -s -I http://127.0.0.1:8000 || (cat storage/logs/ci-server.log && exit 1)
+
+      - name: Run 4-Tier Test Suite (Dual Ground Truth Gate)
+        run: composer test:all
