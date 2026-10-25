@@ -4,10 +4,12 @@ namespace FlashCommerce\Identity;
 
 use Illuminate\Support\ServiceProvider;
 use FlashCommerce\Identity\Domain\Repositories\UserRepositoryInterface;
+use FlashCommerce\Identity\Domain\Services\AuthenticationServiceInterface;
 use FlashCommerce\Identity\Domain\Tokens\RefreshTokenRepositoryInterface;
 use FlashCommerce\Identity\Domain\Tokens\TokenIssuerInterface;
 use FlashCommerce\Identity\Domain\Tokens\TokenVerifierInterface;
 use FlashCommerce\Identity\Infrastructure\Persistence\Eloquent\EloquentUserRepository;
+use FlashCommerce\Identity\Infrastructure\Services\AuthenticationService;
 use FlashCommerce\Identity\Infrastructure\Tokens\JwtTokenService;
 use FlashCommerce\Identity\Infrastructure\Tokens\RedisRefreshTokenRepository;
 use FlashCommerce\Identity\Infrastructure\Verification\EmailOtpVerificationStrategy;
@@ -46,6 +48,18 @@ class IdentityServiceProvider extends ServiceProvider
         $this->app->bind(TokenIssuerInterface::class, JwtTokenService::class);
         $this->app->bind(TokenVerifierInterface::class, JwtTokenService::class);
         $this->app->bind(RefreshTokenRepositoryInterface::class, RedisRefreshTokenRepository::class);
+
+        // Bind Authentication Service
+        $this->app->singleton(AuthenticationService::class, function ($app) {
+            $config = $app['config']->get('identity.tokens', []);
+            return new AuthenticationService(
+                userRepository: $app->make(UserRepositoryInterface::class),
+                tokenIssuer: $app->make(TokenIssuerInterface::class),
+                refreshTokenRepository: $app->make(RefreshTokenRepositoryInterface::class),
+                refreshTtlSeconds: (int) ($config['refresh_ttl_seconds'] ?? 2592000)
+            );
+        });
+        $this->app->bind(AuthenticationServiceInterface::class, AuthenticationService::class);
     }
 
     /**
