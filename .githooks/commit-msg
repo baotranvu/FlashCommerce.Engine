@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# FlashCommerce Guardian Commit-Msg Hook (Conventional Commits Linter)
+# ==============================================================================
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(head -n 1 "$COMMIT_MSG_FILE")
+
+# Allowed types: feat, fix, test, refactor, docs, chore, style, perf, ci
+PATTERN="^(feat|fix|test|refactor|docs|chore|style|perf|ci)(\([a-zA-Z0-9_-]+\))?: .{1,80}$"
+
+if ! echo "$COMMIT_MSG" | grep -Eq "$PATTERN"; then
+    echo ""
+    echo "🚨 [BLOCKED] Invalid Commit Message Format:"
+    echo "   '$COMMIT_MSG'"
+    echo ""
+    echo "   Format must follow Conventional Commits:"
+    echo "   <type>(<scope>): <short summary>"
+    echo "   Allowed types: feat, fix, test, refactor, docs, chore, style, perf, ci"
+    echo "   Examples:"
+    echo "     feat(identity): implement redis otp cooldown strategy"
+    echo "     test(identity): add concurrent race condition e2e suite"
+    echo "     fix(rfc7807): sanitize exception detail message"
+    echo ""
+    exit 1
+fi
+
+echo "✅ [Commit-Msg Guard] Commit format valid."
+exit 0

@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# FlashCommerce Guardian Pre-Commit Hook (AI Code Governance Protocol)
+# ==============================================================================
+set -e
+
+# Configuration
+MAX_STAGED_LOC=400
+SENSITIVE_INVARIANTS=("DB::transaction" "beginTransaction" "Redis::setnx" "lock(" "mutex" "permission" "authorize")
+
+echo "🛡️  [Guardian] Running AI Code Governance Pre-Commit Checks..."
+
+# 1. Scope & Mega-Diff Guard (Anti-Bloat)
+STAGED_STATS=$(git diff --cached --numstat -w)
+if [ -z "$STAGED_STATS" ]; then
+    echo "✅ No staged changes found."
+    exit 0
+fi
+
+TOTAL_LOC=$(echo "$STAGED_STATS" | awk '{added+=$1; deleted+=$2} END {print added+deleted}')
+
+if [ "$TOTAL_LOC" -gt "$MAX_STAGED_LOC" ]; then
+    if [ "$ALLOW_LARGE_COMMIT" != "1" ]; then
+        echo ""
+        echo "🚨 [BLOCKED] Mega-Diff Detected: $TOTAL_LOC lines staged (Max allowed: $MAX_STAGED_LOC LOC)."
+        echo "   AI Code Governance Protocol mandates micro-slicing commits."
+        echo "   Please use 'git reset' and 'git add -p' to slice this into atomic units."
+        echo "   (Override for legitimate massive refactors: ALLOW_LARGE_COMMIT=1 git commit -m '...')"
+        echo ""
+        exit 1
+    else
+        echo "⚠️  [OVERRIDE] ALLOW_LARGE_COMMIT=1 detected. Proceeding with large commit ($TOTAL_LOC LOC)..."
+    fi
+else
+    echo "✅ [Scope Guard] Staged diff size healthy ($TOTAL_LOC LOC <= $MAX_STAGED_LOC LOC)."
+fi
+
+# 2. Deletions-First Invariant Guard (Silent Deletion Detection)
+DELETED_LINES=$(git diff --cached -U0 -w | grep '^-[^-]' || true)
+
+INVARIANT_VIOLATION=0
+for keyword in "${SENSITIVE_INVARIANTS[@]}"; do
+    if echo "$DELETED_LINES" | grep -qi "$keyword"; then
+        echo ""
+        echo "🚨 [DANGER] Invariant Deletion Detected: Keyword '$keyword' found in deleted lines!"
+        echo "   AI frequently silently drops database transactions, distributed locks, or security checks."
+        echo "   Offending deleted context:"
+        echo "$DELETED_LINES" | grep -i "$keyword" | head -n 5
+        echo ""
+        INVARIANT_VIOLATION=1
+    fi
+done
+
+if [ "$INVARIANT_VIOLATION" -eq 1 ]; then
+    if [ "$IGNORE_INVARIANT_DROP" != "1" ]; then
+        echo "❌ [BLOCKED] Staged commit drops critical business invariants."
+        echo "   Review your diff with 'git diff --cached -w -U1'."
+        echo "   (To bypass intentionally: IGNORE_INVARIANT_DROP=1 git commit -m '...')"
+        exit 1
+    else
+        echo "⚠️  [OVERRIDE] IGNORE_INVARIANT_DROP=1 detected. Proceeding with caution..."
+    fi
+else
+    echo "✅ [Invariant Guard] No sensitive business invariants dropped."
+fi
+
+# 3. Fast Syntax Lint on Staged PHP files
+PHP_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.php$' || true)
+if [ -n "$PHP_FILES" ]; then
+    for file in $PHP_FILES; do
+        if [ -f "$file" ]; then
+            php -l "$file" > /dev/null 2>&1 || {
+                echo "🚨 [Syntax Error] PHP syntax check failed for: $file"
+                php -l "$file"
+                exit 1
+            }
+        fi
+    done
+    echo "✅ [Syntax Guard] All staged PHP files passed syntax verification."
+fi
+
+echo "🛡️  [Guardian] All pre-commit governance gates passed. Proceeding with commit."
+exit 0
