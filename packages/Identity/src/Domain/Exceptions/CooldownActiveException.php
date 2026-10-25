@@ -12,6 +12,11 @@ class CooldownActiveException extends IdentityDomainException
         parent::__construct("Please wait {$this->retryAfterSeconds} second(s) before requesting another verification code.");
     }
 
+    public function getRetryAfterSeconds(): int
+    {
+        return $this->retryAfterSeconds;
+    }
+
     public function getStatusCode(): int
     {
         return 429;

@@ -12,6 +12,11 @@ class InvalidOtpException extends IdentityDomainException
         parent::__construct("Invalid verification code. You have {$remainingAttempts} attempt(s) remaining.");
     }
 
+    public function getRemainingAttempts(): int
+    {
+        return $this->remainingAttempts;
+    }
+
     public function getStatusCode(): int
     {
         return 422;

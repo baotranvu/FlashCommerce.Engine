@@ -86,6 +86,11 @@ class EmailOtpVerificationStrategy implements VerificationStrategyInterface
             $currentAttempts = Redis::incr($attemptsKey);
             Redis::expire($attemptsKey, $this->getTtlSeconds());
 
+            if ($currentAttempts >= $maxAttempts) {
+                Redis::del($otpKey);
+                throw new MaxOtpAttemptsExceededException(900);
+            }
+
             $remaining = $maxAttempts - $currentAttempts;
             throw new InvalidOtpException(max(0, $remaining));
         }

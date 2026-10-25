@@ -15,7 +15,8 @@ class RegisterRequest extends FormRequest
     {
         return [
             'name' => ['nullable', 'string', 'max:100'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            // Uniqueness is enforced at the domain/DB index layer to eliminate TOCTOU race conditions and save 1 SELECT query
+            'email' => ['required', 'string', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:6'],
         ];
     }
