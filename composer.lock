@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "368595c3a0b9788a5b8baa9f7270fc3a",
+    "content-hash": "990c7bfe03632b8cc507cd7ed9056cd1",
     "packages": [
         {
             "name": "brick/math",
@@ -512,12 +512,56 @@
             "time": "2025-03-06T22:45:56+00:00"
         },
         {
+            "name": "flashcommerce/catalog",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "packages/Catalog",
+                "reference": "73d943302d18a517585bc13785065a94a1769c24"
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "FlashCommerce\\Catalog\\CatalogServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "FlashCommerce\\Catalog\\": "src/",
+                    "FlashCommerce\\Catalog\\Database\\": "database/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "FlashCommerce\\Catalog\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bao Tran Vu",
+                    "email": "tranvubao.dev@gmail.com"
+                }
+            ],
+            "description": "High-Throughput Product Catalog & Two-Phase Inventory Module for FlashCommerce",
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
             "name": "flashcommerce/identity",
             "version": "dev-main",
             "dist": {
                 "type": "path",
                 "url": "packages/Identity",
-                "reference": "04ec6cfeba71eee7e385eb36b65d87bffde97b41"
+                "reference": "2e5b1720c5755a1db16394b367d4dedaa9061e61"
             },
             "require": {
                 "php": "^8.2"
@@ -532,7 +576,13 @@
             },
             "autoload": {
                 "psr-4": {
-                    "FlashCommerce\\Identity\\": "src/"
+                    "FlashCommerce\\Identity\\": "src/",
+                    "FlashCommerce\\Identity\\Database\\Seeders\\": "database/seeders/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "FlashCommerce\\Identity\\Tests\\": "tests/"
                 }
             },
             "license": [
@@ -7629,6 +7679,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "flashcommerce/catalog": 20,
         "flashcommerce/identity": 20
     },
     "prefer-stable": true,

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use FlashCommerce\Identity\Database\Seeders\UserSeeder;
+use FlashCommerce\Catalog\Database\Seeders\ProductSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,
+            ProductSeeder::class,
         ]);
     }
 }
