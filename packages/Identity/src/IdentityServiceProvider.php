@@ -70,6 +70,9 @@ class IdentityServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Load package database migrations
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+
         // Load package API routes
         $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
 

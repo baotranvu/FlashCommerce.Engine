@@ -14,7 +14,8 @@
     },
     "autoload": {
         "psr-4": {
-            "FlashCommerce\\Identity\\": "src/"
+            "FlashCommerce\\Identity\\": "src/",
+            "FlashCommerce\\Identity\\Database\\Seeders\\": "database/seeders/"
         }
     },
     "autoload-dev": {
