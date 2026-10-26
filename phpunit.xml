@@ -20,6 +20,15 @@
         <testsuite name="Identity::Chaos">
             <directory>packages/Identity/tests/Chaos</directory>
         </testsuite>
+        <testsuite name="Catalog::Unit">
+            <directory>packages/Catalog/tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Catalog::Integration">
+            <directory>packages/Catalog/tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Catalog::E2E">
+            <directory>packages/Catalog/tests/E2E</directory>
+        </testsuite>
         <testsuite name="System::Journeys">
             <directory>tests/E2E/Journeys</directory>
         </testsuite>
