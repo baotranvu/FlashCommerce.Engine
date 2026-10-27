@@ -4,8 +4,6 @@ namespace FlashCommerce\Catalog;
 
 use Illuminate\Support\ServiceProvider;
 use FlashCommerce\Catalog\Domain\Repositories\ProductRepositoryInterface;
-use FlashCommerce\Catalog\Infrastructure\Commands\BenchmarkPaginationCommand;
-use FlashCommerce\Catalog\Infrastructure\Commands\SimulateInventoryUnderflowCommand;
 use FlashCommerce\Catalog\Infrastructure\Repositories\EloquentProductRepository;
 
 class CatalogServiceProvider extends ServiceProvider
@@ -35,13 +33,5 @@ class CatalogServiceProvider extends ServiceProvider
 
         // 2. 🛣️ Auto-load local package API routes
         $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
-
-        // 3. ⌨️ Register CLI commands
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                SimulateInventoryUnderflowCommand::class,
-                BenchmarkPaginationCommand::class,
-            ]);
-        }
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace FlashCommerce\Catalog\Tests\E2E;
 
-use Illuminate\Support\Facades\Artisan;
 use FlashCommerce\Catalog\Tests\CatalogTestCase;
 
 class ProductCatalogApiTest extends CatalogTestCase
@@ -51,25 +50,5 @@ class ProductCatalogApiTest extends CatalogTestCase
 
         $response->assertStatus(404)
             ->assertJsonPath('status', 404);
-    }
-
-    public function test_artisan_demo_underflow_command_executes_safely(): void
-    {
-        $exitCode = Artisan::call('catalog:demo-underflow', [
-            '--product-id' => 1,
-            '--quantity' => 10,
-        ]);
-
-        $this->assertSame(0, $exitCode);
-    }
-
-    public function test_artisan_benchmark_pagination_command_executes_safely(): void
-    {
-        $exitCode = Artisan::call('catalog:benchmark-pagination', [
-            '--offset' => 5000,
-            '--limit' => 10,
-        ]);
-
-        $this->assertSame(0, $exitCode);
     }
 }
