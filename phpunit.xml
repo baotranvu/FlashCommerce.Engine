@@ -29,6 +29,15 @@
         <testsuite name="Catalog::E2E">
             <directory>packages/Catalog/tests/E2E</directory>
         </testsuite>
+        <testsuite name="Ordering::Unit">
+            <directory>packages/Ordering/tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Ordering::Integration">
+            <directory>packages/Ordering/tests/Integration</directory>
+        </testsuite>
+        <testsuite name="Ordering::Chaos">
+            <directory>packages/Ordering/tests/Chaos</directory>
+        </testsuite>
         <testsuite name="System::Journeys">
             <directory>tests/E2E/Journeys</directory>
         </testsuite>

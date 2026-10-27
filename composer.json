@@ -13,7 +13,8 @@
         "php": "^8.2",
         "laravel/framework": "^11.0",
         "flashcommerce/identity": "@dev",
-        "flashcommerce/catalog": "@dev"
+        "flashcommerce/catalog": "@dev",
+        "flashcommerce/ordering": "@dev"
     },
     "autoload": {
         "psr-4": {
@@ -27,7 +28,8 @@
         "psr-4": {
             "Tests\\": "tests/",
             "FlashCommerce\\Identity\\Tests\\": "packages/Identity/tests/",
-            "FlashCommerce\\Catalog\\Tests\\": "packages/Catalog/tests/"
+            "FlashCommerce\\Catalog\\Tests\\": "packages/Catalog/tests/",
+            "FlashCommerce\\Ordering\\Tests\\": "packages/Ordering/tests/"
         }
     },
     "scripts": {
@@ -42,6 +44,7 @@
         "test:chaos": "vendor/bin/phpunit --testsuite=Identity::Chaos",
         "test:identity": "vendor/bin/phpunit --testsuite=Identity::Unit,Identity::Integration,Identity::E2E,Identity::Chaos",
         "test:catalog": "vendor/bin/phpunit --testsuite=Catalog::Unit,Catalog::Integration",
+        "test:ordering": "vendor/bin/phpunit --testsuite=Ordering::Chaos",
         "test:all": "vendor/bin/phpunit"
     },
     "config": {

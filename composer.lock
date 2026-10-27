@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "990c7bfe03632b8cc507cd7ed9056cd1",
+    "content-hash": "7210e310d166258f719dc905a4ed030a",
     "packages": [
         {
             "name": "brick/math",
@@ -595,6 +595,50 @@
                 }
             ],
             "description": "High-Performance Identity & Access Management Module for FlashCommerce",
+            "transport-options": {
+                "relative": true
+            }
+        },
+        {
+            "name": "flashcommerce/ordering",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "packages/Ordering",
+                "reference": "7f6bcff93f37304b63014d7fc4c9f1f63cfa7c5d"
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "FlashCommerce\\Ordering\\OrderingServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "FlashCommerce\\Ordering\\": "src/",
+                    "FlashCommerce\\Ordering\\Database\\": "database/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "FlashCommerce\\Ordering\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Bao Tran Vu",
+                    "email": "tranvubao.dev@gmail.com"
+                }
+            ],
+            "description": "Two-Phase Inventory Hold & Flash Sale Ordering Module for FlashCommerce",
             "transport-options": {
                 "relative": true
             }
@@ -7680,7 +7724,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "flashcommerce/catalog": 20,
-        "flashcommerce/identity": 20
+        "flashcommerce/identity": 20,
+        "flashcommerce/ordering": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
