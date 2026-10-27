@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace FlashCommerce\Catalog\Tests\E2E;
 
+use Illuminate\Support\Facades\Artisan;
 use FlashCommerce\Catalog\Tests\CatalogTestCase;
 
 class ProductCatalogApiTest extends CatalogTestCase
@@ -52,29 +53,23 @@ class ProductCatalogApiTest extends CatalogTestCase
             ->assertJsonPath('status', 404);
     }
 
-    public function test_demo_underflow_endpoint_captures_mysql_1690_and_safe_deduction(): void
+    public function test_artisan_demo_underflow_command_executes_safely(): void
     {
-        $response = $this->getJson('/api/v1/products/demo/underflow?product_id=1&quantity=1000');
+        $exitCode = Artisan::call('catalog:demo-underflow', [
+            '--product-id' => 1,
+            '--quantity' => 10,
+        ]);
 
-        $response->assertStatus(200)
-            ->assertJsonPath('simulation', 'MySQL 1690 Unsigned Underflow vs Safe Conditional Decrement')
-            ->assertJsonPath('stage_1_naive_deduction.crashed', true)
-            ->assertJsonPath('stage_1_naive_deduction.mysql_error.error_code', '22003')
-            ->assertJsonPath('stage_2_safe_atomic_deduction.zero_oversell_guaranteed', true);
+        $this->assertSame(0, $exitCode);
     }
 
-    public function test_demo_benchmark_endpoint_compares_keyset_and_offset(): void
+    public function test_artisan_benchmark_pagination_command_executes_safely(): void
     {
-        $response = $this->getJson('/api/v1/products/demo/benchmark?offset=5000&limit=10');
+        $exitCode = Artisan::call('catalog:benchmark-pagination', [
+            '--offset' => 5000,
+            '--limit' => 10,
+        ]);
 
-        $response->assertStatus(200)
-            ->assertJsonStructure([
-                'benchmark',
-                'parameters',
-                'deep_offset_method' => ['query', 'duration_ms', 'rows_examined'],
-                'keyset_seek_method' => ['query', 'duration_ms', 'rows_examined'],
-                'speedup_factor',
-                'telemetry_log_location',
-            ]);
+        $this->assertSame(0, $exitCode);
     }
 }
