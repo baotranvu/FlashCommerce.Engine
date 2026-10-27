@@ -41,23 +41,36 @@ final class CleanArchitectureBoundaryTest extends TestCase
 
     public function test_controllers_contain_zero_try_catch_blocks(): void
     {
-        $controllerPath = realpath(__DIR__ . '/../../packages/Identity/src/Http/Controllers');
-        $this->assertNotFalse($controllerPath, 'Controllers path must exist');
+        $packagesPath = realpath(__DIR__ . '/../../packages');
+        $this->assertNotFalse($packagesPath, 'Packages path must exist');
 
-        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($controllerPath));
+        $packageDirs = glob($packagesPath . '/*', GLOB_ONLYDIR) ?: [];
+        $scannedControllerCount = 0;
 
-        foreach ($iterator as $file) {
-            if ($file->isDir() || $file->getExtension() !== 'php') {
+        foreach ($packageDirs as $packageDir) {
+            $controllerPath = $packageDir . '/src/Http/Controllers';
+            if (!is_dir($controllerPath)) {
                 continue;
             }
 
-            $content = (string) file_get_contents($file->getPathname());
+            $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($controllerPath));
 
-            $this->assertStringNotContainsString(
-                'catch (',
-                $content,
-                "Architectural violation: Controller [{$file->getFilename()}] contains a try-catch block! All domain exceptions must bubble to RFC 7807 global exception handler."
-            );
+            foreach ($iterator as $file) {
+                if ($file->isDir() || $file->getExtension() !== 'php') {
+                    continue;
+                }
+
+                $content = (string) file_get_contents($file->getPathname());
+                $scannedControllerCount++;
+
+                $this->assertStringNotContainsString(
+                    'catch (',
+                    $content,
+                    "Architectural violation: Controller [{$file->getFilename()}] in [" . basename($packageDir) . "] contains a try-catch block! All domain exceptions must bubble to RFC 7807 global exception handler."
+                );
+            }
         }
+
+        $this->assertGreaterThan(0, $scannedControllerCount, 'Expected at least one controller to be scanned across packages.');
     }
 }
