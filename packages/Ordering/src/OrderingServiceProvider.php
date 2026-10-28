@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace FlashCommerce\Ordering;
 
+use FlashCommerce\Ordering\Domain\Repositories\InventoryHoldRepositoryInterface;
+use FlashCommerce\Ordering\Infrastructure\Redis\RedisInventoryHoldRepository;
 use Illuminate\Support\ServiceProvider;
 
 class OrderingServiceProvider extends ServiceProvider
@@ -15,6 +17,12 @@ class OrderingServiceProvider extends ServiceProvider
     {
         // 1. Merge package configuration
         $this->mergeConfigFrom(__DIR__ . '/../config/ordering.php', 'ordering');
+
+        // 2. Bind Domain Repository Interfaces to Infrastructure Implementations
+        $this->app->bind(
+            InventoryHoldRepositoryInterface::class,
+            RedisInventoryHoldRepository::class
+        );
     }
 
     /**

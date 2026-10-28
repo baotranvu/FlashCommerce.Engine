@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace FlashCommerce\Ordering\Http\Controllers;
 
 use FlashCommerce\Catalog\Domain\Model\Product;
+use FlashCommerce\Ordering\Domain\Repositories\InventoryHoldRepositoryInterface;
 use FlashCommerce\Ordering\Infrastructure\Persistence\Eloquent\OrderItemModel;
 use FlashCommerce\Ordering\Infrastructure\Persistence\Eloquent\OrderModel;
 use Illuminate\Http\JsonResponse;
@@ -14,17 +15,21 @@ use Illuminate\Support\Str;
 
 class OrderCheckoutController extends Controller
 {
+    public function __construct(
+        private readonly InventoryHoldRepositoryInterface $inventoryHoldRepository
+    ) {}
+
     /**
      * Production Checkout Endpoint: POST /api/v1/orders/checkout
      *
-     * Stage 1 Baseline: Natural Eloquent checkout without locks or caching.
-     * Demonstrates real-world Lost Update and overselling anomaly under high concurrency.
+     * Stage 2 Fix: Two-Phase Inventory Hold via atomic Redis Lua Script.
+     * Guarantees 100% Zero-Oversell under massive concurrent flash sale traffic.
      */
     public function checkout(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'user_id'          => ['required', 'integer'],
-            'items'            => ['required', 'array', 'min:1'],
+            'user_id'            => ['required', 'integer'],
+            'items'              => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer'],
             'items.*.quantity'   => ['required', 'integer', 'min:1'],
         ]);
@@ -34,41 +39,69 @@ class OrderCheckoutController extends Controller
 
         $totalAmount = 0;
         $orderLines = [];
+        $successfulHolds = [];
 
-        // 1. Check stock for all items
+        // Phase 1: Atomic Two-Phase Inventory Hold in RAM
         foreach ($items as $item) {
-            $product = Product::query()->find($item['product_id']);
+            $productId = (int) $item['product_id'];
+            $quantity = (int) $item['quantity'];
 
-            if (!$product || $product->physical_stock < $item['quantity']) {
+            $product = Product::query()->find($productId);
+
+            if (!$product) {
+                $this->rollbackHolds($successfulHolds);
                 return response()->json([
-                    'type'    => 'https://errors.flashcommerce.com/out-of-stock',
-                    'title'   => 'Out of Stock',
-                    'status'  => 400,
-                    'detail'  => "Product ID {$item['product_id']} has insufficient physical stock.",
-                ], 400);
+                    'type'   => 'https://errors.flashcommerce.com/product-not-found',
+                    'title'  => 'Not Found',
+                    'status' => 404,
+                    'detail' => "Product ID {$productId} was not found.",
+                ], 404);
             }
 
-            // Natural Eloquent update (Lost Update pattern: calculated in PHP memory)
-            $product->physical_stock = $product->physical_stock - $item['quantity'];
-            $product->save();
+            $holdResult = $this->inventoryHoldRepository->hold(
+                $productId,
+                $quantity,
+                $userId,
+                (int) config('ordering.hold_ttl_seconds', 300)
+            );
 
-            $subtotal = $product->price * $item['quantity'];
+            if (!$holdResult['success']) {
+                $this->rollbackHolds($successfulHolds);
+                return response()->json([
+                    'type'   => 'https://errors.flashcommerce.com/out-of-stock',
+                    'title'  => 'Out of Stock',
+                    'status' => 409,
+                    'detail' => "Product ID {$productId} has insufficient flash sale stock.",
+                ], 409);
+            }
+
+            $successfulHolds[] = [
+                'product_id' => $productId,
+                'hold_token' => $holdResult['hold_token'],
+            ];
+
+            $subtotal = $product->price * $quantity;
             $totalAmount += $subtotal;
 
             $orderLines[] = [
-                'product_id' => $product->id,
-                'quantity'   => $item['quantity'],
+                'product_id' => $productId,
+                'quantity'   => $quantity,
                 'unit_price' => $product->price,
                 'subtotal'   => $subtotal,
             ];
         }
 
-        // 2. Persist order
+        // Primary hold token representing the checkout session
+        $primaryHold = $successfulHolds[0] ?? null;
+
+        // Phase 2: Persist RESERVED order in MySQL
         $order = OrderModel::query()->create([
-            'order_no'     => 'ORD-' . strtoupper(Str::random(10)),
-            'user_id'      => $userId,
-            'status'       => 'PENDING',
-            'total_amount' => $totalAmount,
+            'order_no'        => 'ORD-' . strtoupper(Str::random(10)),
+            'user_id'         => $userId,
+            'status'          => 'RESERVED',
+            'total_amount'    => $totalAmount,
+            'hold_token'      => $primaryHold['hold_token'] ?? null,
+            'hold_expires_at' => now()->addSeconds((int) config('ordering.hold_ttl_seconds', 300)),
         ]);
 
         foreach ($orderLines as $line) {
@@ -77,9 +110,23 @@ class OrderCheckoutController extends Controller
         }
 
         return response()->json([
-            'order_no'     => $order->order_no,
-            'status'       => $order->status,
-            'total_amount' => $order->total_amount,
+            'order_no'        => $order->order_no,
+            'status'          => $order->status,
+            'total_amount'    => $order->total_amount,
+            'hold_token'      => $order->hold_token,
+            'hold_expires_at' => $order->hold_expires_at?->toIso8601String(),
         ], 201);
+    }
+
+    /**
+     * Compensating action: Release already acquired holds if a subsequent item fails.
+     *
+     * @param array<int, array{product_id: int, hold_token: string}> $holds
+     */
+    private function rollbackHolds(array $holds): void
+    {
+        foreach ($holds as $hold) {
+            $this->inventoryHoldRepository->release($hold['product_id'], $hold['hold_token']);
+        }
     }
 }

@@ -5,17 +5,22 @@ declare(strict_types=1);
 namespace FlashCommerce\Ordering\Tests\E2E;
 
 use FlashCommerce\Catalog\Domain\Model\Product;
-use FlashCommerce\Ordering\Infrastructure\Persistence\Eloquent\OrderItemModel;
-use FlashCommerce\Ordering\Infrastructure\Persistence\Eloquent\OrderModel;
 use FlashCommerce\Ordering\Tests\OrderingTestCase;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
 class OrderCheckoutApiTest extends OrderingTestCase
 {
     use DatabaseTransactions;
 
-    public function test_checkout_single_order_successfully(): void
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Redis::flushdb();
+    }
+
+    public function test_checkout_single_order_successfully_with_atomic_hold(): void
     {
         $product = Product::query()->create([
             'sku'            => 'TEST-CHK-' . strtoupper(Str::random(6)),
@@ -43,19 +48,22 @@ class OrderCheckoutApiTest extends OrderingTestCase
                 'order_no',
                 'status',
                 'total_amount',
+                'hold_token',
+                'hold_expires_at',
             ])
-            ->assertJsonPath('status', 'PENDING')
+            ->assertJsonPath('status', 'RESERVED')
             ->assertJsonPath('total_amount', 400000);
+
+        $this->assertNotNull($response->json('hold_token'));
+        $this->assertNotNull($response->json('hold_expires_at'));
 
         $orderNo = $response->json('order_no');
         $this->assertDatabaseHas('orders', [
             'order_no'     => $orderNo,
             'user_id'      => 101,
+            'status'       => 'RESERVED',
             'total_amount' => 400000,
         ]);
-
-        $product->refresh();
-        $this->assertSame(8, $product->physical_stock);
     }
 
     public function test_checkout_fails_when_product_out_of_stock(): void
@@ -81,8 +89,8 @@ class OrderCheckoutApiTest extends OrderingTestCase
 
         $response = $this->postJson('/api/v1/orders/checkout', $payload);
 
-        $response->assertStatus(400)
-            ->assertJsonPath('status', 400)
+        $response->assertStatus(409)
+            ->assertJsonPath('status', 409)
             ->assertJsonPath('title', 'Out of Stock');
     }
 }
