@@ -1,5 +1,6 @@
 import http from 'k6/http';
-import { check, sleep } from 'k6';
+import { check } from 'k6';
+import { generateHtmlReport, generateTerminalSummary } from '../../lib/html-reporter.js';
 
 // Concurrency options: 20 Virtual Users firing 20 requests simultaneously
 export const options = {
@@ -47,4 +48,16 @@ export default function () {
     '400/409 Out of Stock': (r) => r.status === 400 || r.status === 409,
     '500 Server Error': (r) => r.status >= 500,
   });
+}
+
+/**
+ * Custom summary handler:
+ * 1. Prints clean ASCII summary to stdout for terminal feedback.
+ * 2. Writes standalone HTML report to benchmarks/reports/report.html.
+ */
+export function handleSummary(data) {
+  return {
+    'stdout': generateTerminalSummary(data),
+    'benchmarks/reports/report.html': generateHtmlReport(data),
+  };
 }

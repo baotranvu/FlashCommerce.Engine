@@ -44,7 +44,7 @@
         "test:chaos": "vendor/bin/phpunit --testsuite=Identity::Chaos",
         "test:identity": "vendor/bin/phpunit --testsuite=Identity::Unit,Identity::Integration,Identity::E2E,Identity::Chaos",
         "test:catalog": "vendor/bin/phpunit --testsuite=Catalog::Unit,Catalog::Integration",
-        "test:ordering": "vendor/bin/phpunit --testsuite=Ordering::Chaos",
+        "test:ordering": "vendor/bin/phpunit --testsuite=Ordering::Unit,Ordering::E2E",
         "test:all": "vendor/bin/phpunit"
     },
     "config": {

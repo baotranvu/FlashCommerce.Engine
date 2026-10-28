@@ -22,6 +22,10 @@
 /storage/logs/*.log
 tests/E2E/*.log
 
+# Benchmarks & Stress Reports
+/benchmarks/reports/*
+!/benchmarks/reports/.gitkeep
+
 # IDE & OS Artifacts
 .idea/
 .vscode/
