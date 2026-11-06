@@ -7,6 +7,7 @@ namespace FlashCommerce\Ordering;
 use FlashCommerce\Ordering\Domain\Contracts\PaymentStrategyInterface;
 use FlashCommerce\Ordering\Domain\Repositories\InventoryHoldRepositoryInterface;
 use FlashCommerce\Ordering\Domain\Services\OrderSettlementServiceInterface;
+use FlashCommerce\Ordering\Infrastructure\Commands\ReleaseExpiredHoldsCommand;
 use FlashCommerce\Ordering\Infrastructure\Payments\PaymentManager;
 use FlashCommerce\Ordering\Infrastructure\Redis\RedisInventoryHoldRepository;
 use FlashCommerce\Ordering\Infrastructure\Services\OrderSettlementService;
@@ -54,5 +55,12 @@ class OrderingServiceProvider extends ServiceProvider
 
         // 2. 🛣️ Auto-load local package API routes
         $this->loadRoutesFrom(__DIR__ . '/../routes/api.php');
+
+        // 3. ⌨️ Register console commands (Phase 3)
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                ReleaseExpiredHoldsCommand::class,
+            ]);
+        }
     }
 }

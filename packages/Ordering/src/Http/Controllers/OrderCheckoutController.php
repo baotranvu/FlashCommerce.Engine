@@ -11,6 +11,7 @@ use FlashCommerce\Ordering\Infrastructure\Persistence\Eloquent\OrderModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
 class OrderCheckoutController extends Controller
@@ -107,6 +108,11 @@ class OrderCheckoutController extends Controller
         foreach ($orderLines as $line) {
             $line['order_id'] = $order->id;
             OrderItemModel::query()->create($line);
+        }
+
+        // Phase 3: Register delayed expiration in Redis ZSET for Active Sweeper
+        if ($order->hold_expires_at) {
+            Redis::zadd('flash_sale:expirations', $order->hold_expires_at->getTimestamp(), $order->order_no);
         }
 
         return response()->json([

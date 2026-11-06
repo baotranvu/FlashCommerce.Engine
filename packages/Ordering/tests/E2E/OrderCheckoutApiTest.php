@@ -64,6 +64,11 @@ class OrderCheckoutApiTest extends OrderingTestCase
             'status'       => 'RESERVED',
             'total_amount' => 400000,
         ]);
+
+        // Phase 3 Invariant Verification: Must be registered in Redis delayed expiration ZSET
+        $zscore = Redis::zscore('flash_sale:expirations', $orderNo);
+        $this->assertNotNull($zscore, 'Order must be registered in Redis delayed expiration ZSET.');
+        $this->assertGreaterThan(time(), (int) $zscore, 'Expiration timestamp must be in the future.');
     }
 
     public function test_checkout_fails_when_product_out_of_stock(): void
